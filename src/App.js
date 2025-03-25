@@ -195,7 +195,7 @@ function App() {
   const [userClass, setUserClass] = useState(null);
   const [tempGrade, setTempGrade] = useState('');
   const [tempClass, setTempClass] = useState('');
-
+  console.log(import.meta.env);
   const [isSecondImage, setIsSecondImage] = useState(false);
   const [timer, setTimer] = useState(null);
   const [totalCount, setTotalCount] = useState(0);
@@ -206,6 +206,8 @@ function App() {
   const [clickStreak, setClickStreak] = useState(0);
   const [comboActive, setComboActive] = useState(false);
   const [lastClickTime, setLastClickTime] = useState(Date.now());
+
+
   const gradeMap = {
     1: 'firstGrade',
     2: 'secondGrade',
@@ -230,15 +232,15 @@ useEffect(() => {
 useEffect(() => {
   localStorage.setItem('myTotalClickCount', totalCount.toString());
 }, [totalCount]);
-console.log(localStorage.getItem("myTotalClickCount"));
+
+const baseURL = process.env.REACT_APP_API_URL;
 
  useEffect(() => {
   axios
-    .get('https://port-0-punchschool-backend-m1qhzohka7273c65.sel4.cloudtype.app/all')
+    .get(`${baseURL}/all`)
     .then(res => {
       const data = res.data;
 
-      // 3x4 배열 만들기
       const counts = Array(3).fill(null).map(() => Array(4).fill(0));
 
       const gradeIndex = {
@@ -282,7 +284,7 @@ console.log(localStorage.getItem("myTotalClickCount"));
       const gradeKey = gradeMap[userGrade];
       const classKey = classMap[userClass];
       
-      axios.get(`https://port-0-punchschool-backend-m1qhzohka7273c65.sel4.cloudtype.app/${gradeKey}/${classKey}`)
+      axios.get(`${baseURL}/${gradeKey}/${classKey}`)
         .then(res => {
           const count = res.data.clickCount;
           setClassCounts(prev => {
@@ -337,7 +339,7 @@ const handleClick = (e) => {
     const gradeKey = gradeMap[userGrade];
     const classKey = classMap[userClass];
     
-    axios.post(`https://port-0-punchschool-backend-m1qhzohka7273c65.sel4.cloudtype.app/${gradeKey}/${classKey}`, {
+    axios.post(`${baseURL}/${gradeKey}/${classKey}`, {
       clickCount: increment
     }).catch(err => console.error('POST 실패:', err));
     
