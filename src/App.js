@@ -257,7 +257,7 @@ const baseURL = process.env.NODE_ENV;
       const gradeKey = gradeMap[userGrade];
       const classKey = classMap[userClass];
       
-      axios.get(`${NODE_ENV}/${gradeKey}/${classKey}`)
+      axios.get(`${baseURL}/${gradeKey}/${classKey}`)
         .then(res => {
           const count = res.data.clickCount;
           setClassCounts(prev => {
@@ -312,7 +312,7 @@ const handleClick = (e) => {
     const gradeKey = gradeMap[userGrade];
     const classKey = classMap[userClass];
     
-    axios.post(`${NODE_ENV}/${gradeKey}/${classKey}`, {
+    axios.post(`${baseURL}/${gradeKey}/${classKey}`, {
       clickCount: increment
     }).catch(err => console.error('POST 실패:', err));
     
