@@ -228,7 +228,6 @@ useEffect(() => {
   }
 }, []);
 
-// totalCount가 바뀔 때마다 localStorage에 쓰기
 useEffect(() => {
   localStorage.setItem('myTotalClickCount', totalCount.toString());
 }, [totalCount]);
@@ -284,7 +283,7 @@ const baseURL = process.env.REACT_APP_API_URL;
       const gradeKey = gradeMap[userGrade];
       const classKey = classMap[userClass];
       
-      axios.get(`${baseURL}/${gradeKey}/${classKey}`)
+      axios.get(`/${gradeKey}/${classKey}`)
         .then(res => {
           const count = res.data.clickCount;
           setClassCounts(prev => {
@@ -339,7 +338,7 @@ const handleClick = (e) => {
     const gradeKey = gradeMap[userGrade];
     const classKey = classMap[userClass];
     
-    axios.post(`${baseURL}/${gradeKey}/${classKey}`, {
+    axios.post(`/${gradeKey}/${classKey}`, {
       clickCount: increment
     }).catch(err => console.error('POST 실패:', err));
     
@@ -433,7 +432,7 @@ const handleClick = (e) => {
       <ComboBar progress={comboProgress} $active={comboActive} />
       </ComboBarWrapper>
       <TopSection>
-        <CountText>총 클릭 수: {totalCount}</CountText>
+
         <WinnerText>🔥 현재 1등: {findTopClass()}</WinnerText>
         <MyClassText>
           🎯 내 반: {userGrade}학년 {userClass}반 ({classCounts[userGrade - 1][userClass - 1]}회)
