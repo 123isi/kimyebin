@@ -209,7 +209,6 @@ useEffect(() => {
 const baseURL = process.env.REACT_APP_URL;
 
  useEffect(() => {
-  console.log(baseURL);
   axios
     .get(`${baseURL}/all`)
     .then(res => {
