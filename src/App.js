@@ -206,7 +206,7 @@ useEffect(() => {
   localStorage.setItem('myTotalClickCount', totalCount.toString());
 }, [totalCount]);
 
-const baseURL = process.env.NODE_ENV;
+const baseURL = process.env.REACT_APP_URL;
 
  useEffect(() => {
   console.log(baseURL);
