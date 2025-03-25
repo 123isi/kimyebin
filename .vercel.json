@@ -1,8 +1,0 @@
-{
-    "rewrites": [
-      {
-        "source": "/api/:path*",
-        "destination": "https://port-0-punchschool-backend-m1qhzohka7273c65.sel4.cloudtype.app/:path*"
-      }
-    ]
-  }
