@@ -236,7 +236,7 @@ const baseURL = process.env.REACT_APP_API_URL;
 
  useEffect(() => {
   axios
-    .get(`/all`)
+    .get(`/api/all`)
     .then(res => {
       const data = res.data;
 
@@ -283,7 +283,7 @@ const baseURL = process.env.REACT_APP_API_URL;
       const gradeKey = gradeMap[userGrade];
       const classKey = classMap[userClass];
       
-      axios.get(`/${gradeKey}/${classKey}`)
+      axios.get(`/api/${gradeKey}/${classKey}`)
         .then(res => {
           const count = res.data.clickCount;
           setClassCounts(prev => {
@@ -338,7 +338,7 @@ const handleClick = (e) => {
     const gradeKey = gradeMap[userGrade];
     const classKey = classMap[userClass];
     
-    axios.post(`/${gradeKey}/${classKey}`, {
+    axios.post(`/api/${gradeKey}/${classKey}`, {
       clickCount: increment
     }).catch(err => console.error('POST 실패:', err));
     
