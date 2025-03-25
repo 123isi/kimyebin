@@ -236,7 +236,7 @@ const baseURL = process.env.REACT_APP_API_URL;
 
  useEffect(() => {
   axios
-    .get(`${baseURL}/all`)
+    .get(`/all`)
     .then(res => {
       const data = res.data;
 
