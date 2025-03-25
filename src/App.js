@@ -206,10 +206,11 @@ useEffect(() => {
   localStorage.setItem('myTotalClickCount', totalCount.toString());
 }, [totalCount]);
 
-const baseURL = process.env.REACT_APP_API_URL;
+const baseURL = process.env.NODE_ENV;
 
  useEffect(() => {
-  fetch(`api/all`)
+  axios
+    .get(`${baseURL}/all`)
     .then(res => {
       const data = res.data;
 
@@ -256,7 +257,7 @@ const baseURL = process.env.REACT_APP_API_URL;
       const gradeKey = gradeMap[userGrade];
       const classKey = classMap[userClass];
       
-      axios.get(`/api/${gradeKey}/${classKey}`)
+      axios.get(`${NODE_ENV}/${gradeKey}/${classKey}`)
         .then(res => {
           const count = res.data.clickCount;
           setClassCounts(prev => {
@@ -311,7 +312,7 @@ const handleClick = (e) => {
     const gradeKey = gradeMap[userGrade];
     const classKey = classMap[userClass];
     
-    axios.post(`/api/${gradeKey}/${classKey}`, {
+    axios.post(`${NODE_ENV}/${gradeKey}/${classKey}`, {
       clickCount: increment
     }).catch(err => console.error('POST 실패:', err));
     
