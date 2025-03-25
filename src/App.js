@@ -209,6 +209,7 @@ useEffect(() => {
 const baseURL = process.env.NODE_ENV;
 
  useEffect(() => {
+  console.log(baseURL);
   axios
     .get(`${baseURL}/all`)
     .then(res => {
