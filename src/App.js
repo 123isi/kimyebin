@@ -1,18 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
-
 import img1 from './김예빈1.png';
 import img2 from './김예빈2.png';
+import axios from 'axios';
+
 
 const floatUp = keyframes`
-  0% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: translateY(-50px) scale(1.5);
-  }
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-50px) scale(1.5); }
 `;
 const crazyShake = keyframes`
   0% { transform: rotate(0deg) scale(1); }
@@ -21,9 +16,6 @@ const crazyShake = keyframes`
   75% { transform: rotate(10deg) scale(1.1); }
   100% { transform: rotate(0deg) scale(1); }
 `;
-
-
-
 const shake = keyframes`
   0% { transform: translate(0, 0) rotate(0deg); }
   20% { transform: translate(-5px, 0) rotate(-5deg); }
@@ -41,6 +33,8 @@ const flash = keyframes`
   100% { background: rgba(255, 0, 0, 0.8); }
 `;
 
+
+
 const ComboFlash = styled.div`
   position: fixed;
   inset: 0;
@@ -57,6 +51,7 @@ const Container = styled.div`
   position: relative;
   cursor: url('/images/김태현3.svg'), auto;
 `;
+
 const ComboText = styled.div`
   font-size: 3rem;
   color: #ff0;
@@ -163,6 +158,7 @@ const ClassBox = styled.div`
   text-align: center;
   font-weight: bold;
 `;
+
 const BackgroundFlash = styled.div`
   position: fixed;
   inset: 0;
@@ -187,10 +183,9 @@ const ComboBarWrapper = styled.div`
   background: #ddd;
   z-index: 200;
 `;
-
 const ComboBar = styled.div`
   height: 100%;
-  background: ${props => (props.active ? '#ff5252' : '#4caf50')};
+  background: ${props => (props.$active ? '#ff5252' : '#4caf50')};
   width: ${props => props.progress}%;
   transition: width 0.2s ease;
 `;
@@ -204,17 +199,75 @@ function App() {
   const [isSecondImage, setIsSecondImage] = useState(false);
   const [timer, setTimer] = useState(null);
   const [totalCount, setTotalCount] = useState(0);
-  const [classCounts, setClassCounts] = useState(
-    Array(3).fill(null).map(() => Array(4).fill(0))
-  );
+  const [classCounts, setClassCounts] = useState(Array(3).fill(null).map(() => Array(4).fill(0)));
   const [isShaking, setIsShaking] = useState(false);
   const [showRanking, setShowRanking] = useState(false);
   const [hearts, setHearts] = useState([]);
-
   const [clickStreak, setClickStreak] = useState(0);
   const [comboActive, setComboActive] = useState(false);
   const [lastClickTime, setLastClickTime] = useState(Date.now());
+  const gradeMap = {
+    1: 'firstGrade',
+    2: 'secondGrade',
+    3: 'thirdGrade'
+  };
+  
+  const classMap = {
+    1: 'firstClass',
+    2: 'secondClass',
+    3: 'thiredClass', // 백엔드 오타 반영
+    4: 'fourthClass'
+  };
+// 처음 렌더 시점에 localStorage에서 읽어오기
+useEffect(() => {
+  const saved = localStorage.getItem('myTotalClickCount');
+  if (saved !== null) {
+    setTotalCount(parseInt(saved));
+  }
+}, []);
 
+// totalCount가 바뀔 때마다 localStorage에 쓰기
+useEffect(() => {
+  localStorage.setItem('myTotalClickCount', totalCount.toString());
+}, [totalCount]);
+console.log(localStorage.getItem("myTotalClickCount"));
+
+ useEffect(() => {
+  axios
+    .get('https://port-0-punchschool-backend-m1qhzohka7273c65.sel4.cloudtype.app/all')
+    .then(res => {
+      const data = res.data;
+
+      // 3x4 배열 만들기
+      const counts = Array(3).fill(null).map(() => Array(4).fill(0));
+
+      const gradeIndex = {
+        firstGrade: 0,
+        secondGrade: 1,
+        thirdGrade: 2,
+      };
+      const classIndex = {
+        firstClass: 0,
+        secondClass: 1,
+        thiredClass: 2,
+        fourthClass: 3,
+      };
+
+      data.forEach(({ grade, ban, clickCount }) => {
+        const g = gradeIndex[grade];
+        const c = classIndex[ban];
+        if (g !== undefined && c !== undefined) {
+          counts[g][c] = clickCount;
+        }
+      });
+
+      setClassCounts(counts);
+    })
+    .catch(err => console.error('전체 데이터 실패:', err));
+}, []);
+
+
+  // 유저 저장된 학년/반 불러오기
   useEffect(() => {
     const savedGrade = localStorage.getItem('userGrade');
     const savedClass = localStorage.getItem('userClass');
@@ -225,63 +278,72 @@ function App() {
   }, []);
 
   useEffect(() => {
+    if (userGrade && userClass) {
+      const gradeKey = gradeMap[userGrade];
+      const classKey = classMap[userClass];
+      
+      axios.get(`https://port-0-punchschool-backend-m1qhzohka7273c65.sel4.cloudtype.app/${gradeKey}/${classKey}`)
+        .then(res => {
+          const count = res.data.clickCount;
+          setClassCounts(prev => {
+            const updated = prev.map(row => [...row]);
+            updated[userGrade - 1][userClass - 1] = count;
+            return updated;
+          });
+        })
+        .catch(err => console.error('내 반 데이터 실패:', err));
+    }
+  }, [userGrade, userClass]);
+  
+
+  // 콤보 게이지 감소
+  useEffect(() => {
     const interval = setInterval(() => {
       const now = Date.now();
-  
-      if (!comboActive) {
-        // 콤보 전 상태: 3초 동안 클릭 안 하면 -10
-        if (now - lastClickTime > 3000 && clickStreak > 0) {
-          setClickStreak(prev => Math.max(prev - 10, 0));
-        }
-      } else {
-        // 콤보 발동 중: 1초마다 -20
+      if (!comboActive && now - lastClickTime > 3000 && clickStreak > 0) {
+        setClickStreak(prev => Math.max(prev - 10, 0));
+      } else if (comboActive) {
         setClickStreak(prev => {
           const next = Math.max(prev - 20, 0);
-          if (next <= 0) {
-            setComboActive(false);
-          }
+          if (next <= 0) setComboActive(false);
           return next;
         });
       }
-  
     }, 1000);
-  
     return () => clearInterval(interval);
   }, [comboActive, clickStreak, lastClickTime]);
-  
-  const handleSaveUserInfo = () => {
-    if (tempGrade && tempClass) {
-      localStorage.setItem('userGrade', tempGrade);
-      localStorage.setItem('userClass', tempClass);
-      setUserGrade(parseInt(tempGrade));
-      setUserClass(parseInt(tempClass));
+
+
+const handleClick = (e) => {
+  if (userGrade === null || userClass === null) return;
+
+  const now = Date.now();
+  if (!comboActive) setLastClickTime(now);
+
+  setClickStreak(prev => {
+    if (comboActive) return prev;
+    const next = prev + 1;
+    if (next >= 100) {
+      setComboActive(true);
+      return 100;
     }
-  };
+    return next;
+  });
 
-  const handleClick = (e) => {
-    if (userGrade === null || userClass === null) return;
+  const increment = comboActive ? 2 : 1;
 
-    if (!comboActive) {
-      setLastClickTime(Date.now());
-    }
+  setTotalCount(prev => prev + increment);
 
-    setClickStreak(prev => {
-      if (comboActive) return prev; // 콤보 중엔 증가 X
-      const next = prev + 1;
-      if (next >= 100) {
-        setComboActive(true);
-        return 100; // 콤보 시작 시 게이지 100으로 고정
-      }
-      return next;
-    });
+    const gradeKey = gradeMap[userGrade];
+    const classKey = classMap[userClass];
     
-    const increment = comboActive ? 2 : 1;
-    setTotalCount(prev => prev + increment);
-
+    axios.post(`https://port-0-punchschool-backend-m1qhzohka7273c65.sel4.cloudtype.app/${gradeKey}/${classKey}`, {
+      clickCount: increment
+    }).catch(err => console.error('POST 실패:', err));
+    
     setIsSecondImage(true);
     if (timer) clearTimeout(timer);
-    const newTimer = setTimeout(() => setIsSecondImage(false), 3000);
-    setTimer(newTimer);
+    setTimer(setTimeout(() => setIsSecondImage(false), 3000));
 
     setClassCounts(prev => {
       const updated = prev.map(row => [...row]);
@@ -292,7 +354,6 @@ function App() {
     setIsShaking(true);
     setTimeout(() => setIsShaking(false), 500);
 
-    // 하트 여러 개 생성
     const heartCount = comboActive ? 5 : 1;
     const newHearts = Array.from({ length: heartCount }).map((_, i) => ({
       id: Date.now() + i,
@@ -300,22 +361,25 @@ function App() {
       y: e.clientY + Math.random() * 40 - 20
     }));
     setHearts(prev => [...prev, ...newHearts]);
-
     setTimeout(() => {
       setHearts(prev => prev.filter(h => !newHearts.some(nh => nh.id === h.id)));
     }, 1000);
   };
-  
-  useEffect(() => {
-    return () => {
-      if (timer) clearTimeout(timer);
-    };
-  }, [timer]);
+
+  const handleSaveUserInfo = () => {
+    if (tempGrade && tempClass) {
+      localStorage.setItem('userGrade', tempGrade);
+      localStorage.setItem('userClass', tempClass);
+      setUserGrade(parseInt(tempGrade));
+      setUserClass(parseInt(tempClass));
+    }
+  };
 
   const findTopClass = () => {
     let max = 0;
     let top = { grade: 1, classNum: 1 };
     classCounts.forEach((gradeRow, gIdx) => {
+      if (!Array.isArray(gradeRow)) return; // 배열이 아닐 경우 건너뜀
       gradeRow.forEach((count, cIdx) => {
         if (count > max) {
           max = count;
@@ -325,6 +389,7 @@ function App() {
     });
     return `${top.grade}학년 ${top.classNum}반`;
   };
+  const comboProgress = Math.min((clickStreak / 100) * 100, 100);
 
   if (userGrade === null || userClass === null) {
     return (
@@ -357,18 +422,14 @@ function App() {
     );
   }
 
-  const comboProgress = Math.min((clickStreak / 100) * 100, 100);
-
   return (
     <Container onClick={handleClick}>
-    {comboActive && <ComboFlash />}
-    {comboActive && <ComboText>🔥콤보!!🔥</ComboText>}
-    {comboActive && <BackgroundFlash />}
-  
-    <ComboBarWrapper>
-      <ComboBar progress={comboProgress} active={comboActive} />
-    </ComboBarWrapper>
-
+      {comboActive && <ComboFlash />}
+      {comboActive && <ComboText>🔥콤보!!🔥</ComboText>}
+      {comboActive && <BackgroundFlash />}
+      <ComboBarWrapper>
+      <ComboBar progress={comboProgress} $active={comboActive} />
+      </ComboBarWrapper>
       <TopSection>
         <CountText>총 클릭 수: {totalCount}</CountText>
         <WinnerText>🔥 현재 1등: {findTopClass()}</WinnerText>
@@ -381,25 +442,26 @@ function App() {
           alt="클릭 이미지"
         />
       </TopSection>
-
       {hearts.map((h) => (
         <Heart key={h.id} x={h.x} y={h.y}>❤️</Heart>
       ))}
-
       <FixedBar onClick={() => setShowRanking(true)}>📊 전체 반 순위 보기</FixedBar>
-
       <SlideUpRanking $visible={showRanking}>
         <h2 style={{ textAlign: 'center' }}>전체 반 클릭 순위</h2>
         <Grid>
-          {classCounts.map((grade, gIdx) =>
-            grade.map((cnt, cIdx) => (
-              <ClassBox key={`${gIdx}-${cIdx}`}>
-                {gIdx + 1}학년 {cIdx + 1}반<br />
-                {cnt}회
-              </ClassBox>
-            ))
-          )}
-        </Grid>
+  {classCounts.map((grade, gIdx) => {
+    if (!Array.isArray(grade)) return null;
+
+    return grade.map((cnt, cIdx) => (
+      <ClassBox key={`${gIdx}-${cIdx}`}>
+        {gIdx + 1}학년 {cIdx + 1}반<br />
+        {cnt}회
+      </ClassBox>
+    ));
+  })}
+</Grid>
+
+
         <div style={{ textAlign: 'center', marginTop: '2rem' }}>
           <button onClick={() => setShowRanking(false)}>닫기</button>
         </div>
