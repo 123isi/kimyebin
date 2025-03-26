@@ -67,6 +67,8 @@ const ClickableImage = styled.img`
   height: auto;
   cursor: url('/images/김태현3.svg'), auto;
   transition: 0.2s;
+  user-select: none;
+  pointer-events: auto;
   &.shaking {
     animation: ${shake} 0.5s ease;
   }
