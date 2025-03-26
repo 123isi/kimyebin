@@ -308,12 +308,12 @@ const handleClick = (e) => {
   });
 
   const increment = comboActive ? 2 : 1;
-
-  setTotalCount(prev => prev + increment);
-
+  if (comboActive){
     const gradeKey = gradeMap[userGrade];
     const classKey = classMap[userClass];
-    
+    axios.post(`${baseURL}/${gradeKey}/${classKey}`, {
+      clickCount: increment
+    })
     axios.post(`${baseURL}/${gradeKey}/${classKey}`, {
       clickCount: increment
     }).catch(err => console.error('POST 실패:', err));
@@ -327,6 +327,27 @@ const handleClick = (e) => {
       updated[userGrade - 1][userClass - 1] += increment;
       return updated;
     });
+  }
+  else{
+    const gradeKey = gradeMap[userGrade];
+    const classKey = classMap[userClass];
+    axios.post(`${baseURL}/${gradeKey}/${classKey}`, {
+      clickCount: increment
+    }).catch(err => console.error('POST 실패:', err));
+    
+    setIsSecondImage(true);
+    if (timer) clearTimeout(timer);
+    setTimer(setTimeout(() => setIsSecondImage(false), 3000));
+
+    setClassCounts(prev => {
+      const updated = prev.map(row => [...row]);
+      updated[userGrade - 1][userClass - 1] += increment;
+      return updated;
+    })
+  }
+  setTotalCount(prev => prev + increment);
+
+    
 
     setIsShaking(true);
     setTimeout(() => setIsShaking(false), 500);
